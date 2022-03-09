@@ -7,7 +7,7 @@
       <div style="padding: 24px; min-height: 81vh; width: 90%; margin-left: 5%">
         <a-row style="align-items: center">
           <a-col :span="8" class="robot-img-container">
-            <img :src="robotImg" class="robot-img" />
+            <ruibot-logo :state="logoState"></ruibot-logo>
           </a-col>
           <a-col :span="15" :offset="1" style="padding: 10px">
             <a-row>
@@ -47,9 +47,9 @@
             <a-row>
               <a-col :span="20">
                 <a-textarea
-                  v-model:value="caseDecription"
+                  v-model:value="caseDescription"
                   placeholder="在这里输入案件描述"
-                  :autosize="{ minRows: 3, maxRows: 3 }"
+                  :autoSize="{ minRows: 3, maxRows: 3 }"
                 />
               </a-col>
               <a-col :span="3" :offset="1">
@@ -58,6 +58,7 @@
                   type="primary"
                   style="height: 50px; width: 50px"
                   :loading="searchLoading"
+                  @click="getPrediction"
                 >
                   <template #icon>
                     <a-spin :indicator="indicator" />
@@ -67,10 +68,18 @@
             </a-row>
           </a-col>
         </a-row>
+        <a-row>
+          <a-col :span="24">
+            <chat :chat="chat" />
+          </a-col>
+          <a-col :span="24">
+            <chat-history :chats="chatHistory.data" style="width: 100%" />
+          </a-col>
+        </a-row>
       </div>
     </a-layout-content>
     <a-layout-footer style="text-align: center">
-      Ant Design ©2018 Created by Ant UED
+      Ruibot ©2018 Created by ChengRui
     </a-layout-footer>
   </a-layout>
   <private-policy-modal
@@ -80,15 +89,25 @@
 </template>
 
 <script>
-import { ref, h } from "vue";
+import { ref, h, reactive, getCurrentInstance } from "vue";
 import { SettingOutlined } from "@ant-design/icons-vue";
+import jwtDecode from "jwt-decode";
+import { reverse, trim } from "lodash";
+import { message } from "ant-design-vue";
+import dayjs from "dayjs";
 
 import PrivatePolicyModal from "@/components/PrivatePolicyModal.vue";
+import ChatHistory from "@/components/ChatHistory.vue";
+import Chat from "@/components/Chat.vue";
+import RuibotLogo from "@/components/RuibotLogo.vue";
 
 export default {
   name: "HomeView",
   components: {
     PrivatePolicyModal,
+    ChatHistory,
+    Chat,
+    RuibotLogo,
     SettingOutlined,
   },
   methods: {
@@ -98,32 +117,117 @@ export default {
     closePrivacyModal() {
       this.policyVisibility = false;
     },
+    getPrediction() {
+      this.searchLoading = true;
+      this.logoState = "waiting";
+
+      this.caseDescription = trim(this.caseDescription);
+      if (this.caseDescription && this.caseDescription !== "")
+        this.chat["queryText"] = this.caseDescription;
+      else return;
+
+      let token = localStorage.getItem("Token");
+
+      this.$http
+        .get("/api/exclude/user")
+        .then((response) => {
+          let res = response.data;
+          if (res.code === 200) {
+            token = res.result;
+            localStorage.setItem("Token", token);
+          } else {
+            message.error("Unexpected error happened");
+          }
+
+          const decode = jwtDecode(token);
+          this.$http
+            .post("/api/prediction", {
+              description: this.caseDescription,
+              user_id: decode.ID,
+            })
+            .then((response) => {
+              let res = response.data;
+              this.logoState = "finished";
+              if (res.code === 200) {
+                this.chat["responseText"] = res.result;
+                let c = {
+                  queryTime: dayjs().format(),
+                  responseText: res.result,
+                  queryText: this.caseDescription,
+                };
+                setTimeout(() => {
+                  this.chatHistory.data.unshift(c);
+                  this.chat["responseText"] = null;
+                  this.chat["queryText"] = null;
+                }, 1500);
+              } else {
+                this.logoState = "normal";
+              }
+              this.searchLoading = false;
+              this.caseDescription = "";
+            });
+        })
+        .catch((error) => {
+          message.error("Unexpected error happened");
+          this.searchLoading = false;
+          this.logoState = "normal";
+        });
+    },
   },
   setup() {
+    const { appContext } = getCurrentInstance();
+    const $http = appContext.config.globalProperties.$http;
+
     const robotImg = ref(require("@/assets/logo-3d.png"));
 
     const policyVisibility = ref(false);
 
-    const caseDecription = ref("");
+    const caseDescription = ref("");
 
+    const searchLoading = ref(false);
     const indicator = h(SettingOutlined, {
       style: {
         fontSize: "1.5rem",
         color: "white",
       },
-      spin: false,
+      spin: searchLoading.value,
     });
-    const searchLoading = ref(false);
+
+    const chatHistory = reactive({
+      data: [],
+    });
+
+    const chat = reactive({
+      queryText: "",
+      responseText: "",
+    });
+
+    let token = localStorage.getItem("Token");
+    if (token) {
+      const decode = jwtDecode(token);
+      $http.get("/api/prediction/" + decode.ID).then((response) => {
+        let res = response.data;
+        if (res.code === 200) chatHistory.data = res.result;
+        reverse(chatHistory.data);
+      });
+    }
+
+    const logoState = ref("normal");
 
     return {
       robotImg,
 
       policyVisibility,
 
-      caseDecription,
+      caseDescription,
 
       indicator,
       searchLoading,
+
+      chatHistory,
+      chat,
+
+      logoState,
     };
   },
 };
@@ -139,12 +243,6 @@ export default {
 
 .brand-name {
   color: #409eff;
-}
-
-.robot-img {
-  width: 100%;
-  height: auto;
-  padding: 10px;
 }
 
 .right-contents {

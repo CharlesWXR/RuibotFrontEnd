@@ -17,7 +17,19 @@ app.use(ElementPlus);
 app.use(router);
 app.use(AntDesign);
 
-axios.defaults.baseURL = 'http://localhost:8088';
+axios.defaults.baseURL = 'http://192.168.137.1:8088';
+
+axios.interceptors.request.use(config => {
+    try {
+        if (localStorage.Token) {
+            config.headers.Token = localStorage.Token;
+        }
+        return config;
+    } catch (e) {
+        console.error(e);
+        return config;
+    }
+});
 
 app.config.globalProperties.$http = axios;
 
