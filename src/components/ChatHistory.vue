@@ -96,10 +96,12 @@ export default {
 
 .user-content {
   background-color: #b3e19d;
+  white-space: pre-wrap;
 }
 
 .ruibot-content {
   background-color: #8cc5ff;
+  white-space: pre-wrap;
 }
 
 .chat-list-item {

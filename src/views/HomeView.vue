@@ -1,7 +1,7 @@
 <template>
   <a-layout>
     <a-layout-header>
-      <img :src="require('../assets/main-logo.png')" class="logo" />
+      <img :src="require('../assets/main-logo-2.png')" class="logo" />
     </a-layout-header>
     <a-layout-content style="background: #fff; padding: 0 50px">
       <div style="padding: 24px; min-height: 81vh; width: 90%; margin-left: 5%">
@@ -12,25 +12,25 @@
           <a-col :span="15" :offset="1" style="padding: 10px">
             <a-row>
               <a-col :span="12">
-                <img :src="require('../assets/brand-title.png')" />
+                <img :src="require('../assets/brand-title-1.png')" />
               </a-col>
             </a-row>
             <a-row class="right-contents">
               <a-col :span="16">
                 <a-typography-title :level="2">
-                  睿宝——您的私人法律机器人
+                  您的秘密“法宝”
                 </a-typography-title>
               </a-col>
             </a-row>
             <a-row>
               <a-typography-paragraph>
-                睿宝将为您提供
+                法宝将为您提供
                 <a-typography-text strong> 免费 </a-typography-text>
                 而
                 <a-typography-text strong> 高可信度 </a-typography-text>
                 的法律咨询服务，
                 <a-typography-text strong> 无需专业表达 </a-typography-text>
-                即可为您提供法律建议。睿宝充分尊重和保护用户的个人隐私，您的案件数据仅用于程序自动分析及训练，详细条款请参阅
+                即可为您提供法律建议。法宝充分尊重和保护用户的个人隐私，您的案件数据仅用于程序自动分析及训练，详细条款请参阅
                 <a-typography-link @click="openPrivacyModal"
                   >《隐私策略》</a-typography-link
                 >
@@ -78,9 +78,7 @@
         </a-row>
       </div>
     </a-layout-content>
-    <a-layout-footer style="text-align: center">
-      Ruibot ©2018 Created by ChengRui
-    </a-layout-footer>
+    <a-layout-footer style="text-align: center"> LawBot ©2022 </a-layout-footer>
   </a-layout>
   <private-policy-modal
     :visible="policyVisibility"
@@ -237,8 +235,8 @@ export default {
 .logo {
   float: left;
   width: auto;
-  height: 55px;
-  margin: 5px 24px 16px 0;
+  height: 60px;
+  padding: 10px 5px 5px 0;
 }
 
 .brand-name {
